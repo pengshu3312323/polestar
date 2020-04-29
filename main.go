@@ -1,7 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"context"
+
+	md "polestar/music-downloader"
+)
 
 func main() {
-	fmt.Println("developing")
+	scheduler := md.NewMusicDownloaderScheduler(md.NewCommandLineInputReceiver())
+	scheduler.Start(context.Background())
 }
