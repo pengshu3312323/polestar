@@ -9,7 +9,7 @@ import (
 type dummyDownloader struct {
 }
 
-func newDummyDownloader() *dummyDownloader {
+func newDummyDownloader(ch chan *SongDownload) *dummyDownloader {
 	return &dummyDownloader{}
 }
 
@@ -31,19 +31,39 @@ func (downloader *dummyDownloader) Search(songName string) []*SongDetail {
 	}
 }
 
-func (downloader *dummyDownloader) Download(songID string) {
+func (downloader *dummyDownloader) Download(songID string) (*SongDownload, error) {
 	fmt.Printf("%s: downloading", songID)
+	return &SongDownload{
+		SongName: "One",
+		SongFile: make([]byte, 0),
+	}, nil
+}
+
+func (downloader *dummyDownloader) ReadyToStore(song *SongDownload) {
 }
 
 func TestMusicDownloaderScheduler_RegisterMusicDownloader(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	fileHandler := GetLocalDirFileHandler()
+	downLoadCh := fileHandler.Consume(ctx, cancel)
 	scheduler := NewMusicDownloaderScheduler(NewCommandLineInputReceiver())
-	scheduler.RegisterMusicDownloader(newDummyDownloader())
-	scheduler.Start(context.Background())
+	scheduler.RegisterMusicDownloader(newDummyDownloader(downLoadCh))
 
-	for _, downloader := range scheduler.RegisteredDownloader {
-		fmt.Println(downloader.Name())
-		downloader.Search("")
-		downloader.Download("test song")
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			for _, downloader := range scheduler.RegisteredDownloader {
+				fmt.Println(downloader.Name())
+				downloader.Search("")
+				song, err := downloader.Download("test song")
+				if err != nil {
+					panic(err)
+				}
+				downloader.ReadyToStore(song)
+			}
+		}
 	}
 }
 

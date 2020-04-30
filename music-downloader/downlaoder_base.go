@@ -13,7 +13,8 @@ const (
 type MusicDownloader interface {
 	Name() string
 	Search(songName string) []*SongDetail
-	Download(songID string)
+	Download(songID string) (*SongDownload, error)
+	ReadyToStore(song *SongDownload)
 }
 
 // TODO
@@ -24,7 +25,8 @@ type SongDetail struct {
 }
 
 type DownloadFileHandler interface {
-	Store([]byte) error
+	Store(song *SongDownload)
+	Consume(ctx context.Context, cancel context.CancelFunc) chan *SongDownload
 }
 
 type SongDownload struct {
@@ -32,11 +34,25 @@ type SongDownload struct {
 	SongFile []byte
 }
 
+// todo
+func (sd *SongDownload) isValid() bool {
+	return true
+}
+
+// todo
+func (sd *SongDownload) buildFilePath() string {
+	return ""
+}
+
 type InputCommand struct {
 	Name   string
 	Action Action
 }
 
+func (ic *InputCommand) isValid() bool {
+	return true
+}
+
 type inputReceiver interface {
-	Listen(ctx context.Context) chan *InputCommand
+	Listen(ctx context.Context, cancel context.CancelFunc) chan *InputCommand
 }

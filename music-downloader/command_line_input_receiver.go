@@ -3,25 +3,34 @@ package music_downloader
 import (
 	"bufio"
 	"context"
-	"fmt"
+	"log"
 	"os"
 )
 
 type CommandLineInputReceiver struct {
-	ch chan *InputCommand
+	ch           chan *InputCommand
+	inputHandler func(originalInput string) *InputCommand
+}
+
+// TODO
+func simpleInputHandler(originalInput string) *InputCommand {
+	return &InputCommand{}
 }
 
 func NewCommandLineInputReceiver() *CommandLineInputReceiver {
 	return &CommandLineInputReceiver{
-		ch: make(chan *InputCommand),
+		ch:           make(chan *InputCommand),
+		inputHandler: simpleInputHandler,
 	}
 }
 
-func (r *CommandLineInputReceiver) Listen(ctx context.Context) chan *InputCommand {
+func (r *CommandLineInputReceiver) Listen(ctx context.Context, cancel context.CancelFunc) chan *InputCommand {
 	scanner := bufio.NewScanner(os.Stdin)
 	go func() {
 		defer func() {
-			fmt.Println("input receiver quit")
+			close(r.ch)
+			cancel()
+			log.Println("input receiver quit")
 		}()
 		for {
 			select {
@@ -29,8 +38,9 @@ func (r *CommandLineInputReceiver) Listen(ctx context.Context) chan *InputComman
 				return
 			default:
 				if scanner.Scan() {
-					r.ch <- &InputCommand{
-						Name: scanner.Text(),
+					input := r.inputHandler(scanner.Text())
+					if input.isValid() {
+						r.ch <- input
 					}
 				}
 			}
