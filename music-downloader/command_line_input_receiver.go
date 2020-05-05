@@ -5,7 +5,15 @@ import (
 	"context"
 	"log"
 	"os"
+	"regexp"
 )
+
+var Actions = map[string]Action{
+	"-s": ACTION_SEARCH,
+	"-d": ACTION_DOWNLOAD,
+}
+
+const inputReStr = `^(-[a-zA-Z]) +(.+)$`
 
 type CommandLineInputReceiver struct {
 	ch           chan *InputCommand
@@ -14,6 +22,18 @@ type CommandLineInputReceiver struct {
 
 // TODO
 func simpleInputHandler(originalInput string) *InputCommand {
+	re := regexp.MustCompile(inputReStr)
+	match := re.FindStringSubmatch(originalInput)
+	if len(match) == 3 {
+		if _, ok := Actions[match[1]]; ok {
+			return &InputCommand{
+				Name:   match[2],
+				Action: Actions[match[1]],
+			}
+		}
+		log.Println("Err Action, please use: [-s, -d]")
+	}
+	log.Println("Err Input, please input '<Action> <Name>'")
 	return &InputCommand{}
 }
 
