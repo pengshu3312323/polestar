@@ -2,6 +2,7 @@ package music_downloader
 
 import (
 	"context"
+	"io"
 	"log"
 	"net/http"
 )
@@ -42,7 +43,7 @@ func (s *HttpInputService) search(w http.ResponseWriter, r *http.Request) {
 	song := query.Get("song")
 	if len(song) < 1 {
 		w.WriteHeader(http.StatusBadRequest)
-		if _, err := w.Write([]byte("Give me a song")); err != nil {
+		if _, err := io.WriteString(w, "Give me a song"); err != nil {
 			log.Printf("err: %v", err)
 		}
 		return
@@ -53,7 +54,7 @@ func (s *HttpInputService) search(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	// todo
-	if _, err := w.Write([]byte("developing....")); err != nil {
+	if _, err := io.WriteString(w, "developing...."); err != nil {
 		log.Printf("err: %v", err)
 	}
 	return
@@ -64,7 +65,7 @@ func (s *HttpInputService) download(w http.ResponseWriter, r *http.Request) {
 	songId := query.Get("songId")
 	if len(songId) < 1 {
 		w.WriteHeader(http.StatusBadRequest)
-		if _, err := w.Write([]byte("Give me a songId")); err != nil {
+		if _, err := io.WriteString(w, "Give me a song id"); err != nil {
 			log.Printf("err: %v", err)
 		}
 		return
@@ -75,7 +76,7 @@ func (s *HttpInputService) download(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	// todo
-	if _, err := w.Write([]byte("developing....")); err != nil {
+	if _, err :=io.WriteString(w, "developing...."); err != nil {
 		log.Printf("err: %v", err)
 	}
 	return
@@ -83,7 +84,7 @@ func (s *HttpInputService) download(w http.ResponseWriter, r *http.Request) {
 
 func (s *HttpInputService) Ping(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte("pong")); err != nil {
+	if _, err := io.WriteString(w, "pong"); err != nil {
 		log.Println("command server is not ready: ", err)
 	}
 }
